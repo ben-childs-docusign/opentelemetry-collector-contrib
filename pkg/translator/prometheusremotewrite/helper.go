@@ -239,7 +239,8 @@ func (c *prometheusConverter) addHistogramDataPoints(dataPoints pmetric.Histogra
 		// cumulative count for conversion to cumulative histogram
 		var cumulativeCount uint64
 
-		var bucketBounds []bucketBoundsData
+		bucketBounds := make([]bucketBoundsData, 0, min(pt.ExplicitBounds().Len(), pt.BucketCounts().Len())+1)
+		bucketName := baseName + bucketStr
 
 		// process each bound, based on histograms proto definition, # of buckets = # of explicit bounds + 1
 		for i := 0; i < pt.ExplicitBounds().Len() && i < pt.BucketCounts().Len(); i++ {
@@ -252,8 +253,15 @@ func (c *prometheusConverter) addHistogramDataPoints(dataPoints pmetric.Histogra
 			if pt.Flags().NoRecordedValue() {
 				bucket.Value = math.Float64frombits(value.StaleNaN)
 			}
-			boundStr := strconv.FormatFloat(bound, 'f', -1, 64)
-			labels := createLabels(baseName+bucketStr, baseLabels, leStr, boundStr)
+
+			// Memoize bucket bounds to reduce allocations and cpu utilization
+			boundStr, boundOk := c.bucketBounds[bound]
+			if !boundOk {
+				boundStr = strconv.FormatFloat(bound, 'f', -1, 64)
+				c.bucketBounds[bound] = boundStr
+			}
+
+			labels := createLabels(bucketName, baseLabels, leStr, boundStr)
 			ts := c.addSample(bucket, labels)
 
 			bucketBounds = append(bucketBounds, bucketBoundsData{ts: ts, bound: bound})
@@ -267,7 +275,7 @@ func (c *prometheusConverter) addHistogramDataPoints(dataPoints pmetric.Histogra
 		} else {
 			infBucket.Value = float64(pt.Count())
 		}
-		infLabels := createLabels(baseName+bucketStr, baseLabels, leStr, pInfStr)
+		infLabels := createLabels(bucketName, baseLabels, leStr, pInfStr)
 		ts := c.addSample(infBucket, infLabels)
 
 		bucketBounds = append(bucketBounds, bucketBoundsData{ts: ts, bound: math.Inf(1)})

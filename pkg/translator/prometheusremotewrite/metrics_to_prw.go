@@ -41,8 +41,9 @@ func FromMetrics(md pmetric.Metrics, settings Settings) (map[string]*prompb.Time
 
 // prometheusConverter converts from OTel write format to Prometheus write format.
 type prometheusConverter struct {
-	unique    map[uint64]*prompb.TimeSeries
-	conflicts map[uint64][]*prompb.TimeSeries
+	unique       map[uint64]*prompb.TimeSeries
+	conflicts    map[uint64][]*prompb.TimeSeries
+	bucketBounds map[float64]string
 }
 
 func newPrometheusConverter() *prometheusConverter {
