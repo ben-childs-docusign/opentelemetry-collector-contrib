@@ -48,8 +48,9 @@ type prometheusConverter struct {
 
 func newPrometheusConverter() *prometheusConverter {
 	return &prometheusConverter{
-		unique:    map[uint64]*prompb.TimeSeries{},
-		conflicts: map[uint64][]*prompb.TimeSeries{},
+		unique:       map[uint64]*prompb.TimeSeries{},
+		conflicts:    map[uint64][]*prompb.TimeSeries{},
+		bucketBounds: map[float64]string{},
 	}
 }
 
