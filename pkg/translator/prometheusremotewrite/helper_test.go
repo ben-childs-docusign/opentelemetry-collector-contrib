@@ -985,9 +985,9 @@ func TestCreateLabels(t *testing.T) {
 				{Name: "base2", Value: "value2"},
 			},
 			expected: []prompb.Label{
+				{Name: model.MetricNameLabel, Value: "test"},
 				{Name: "base1", Value: "value1"},
 				{Name: "base2", Value: "value2"},
-				{Name: model.MetricNameLabel, Value: "test"},
 			},
 		},
 		{
@@ -999,10 +999,10 @@ func TestCreateLabels(t *testing.T) {
 			},
 			extras: []string{"extra1", "extraValue1"},
 			expected: []prompb.Label{
+				{Name: model.MetricNameLabel, Value: "test"},
 				{Name: "base1", Value: "value1"},
 				{Name: "base2", Value: "value2"},
 				{Name: "extra1", Value: "extraValue1"},
-				{Name: model.MetricNameLabel, Value: "test"},
 			},
 		},
 		{
@@ -1014,11 +1014,11 @@ func TestCreateLabels(t *testing.T) {
 			},
 			extras: []string{"extra1", "extraValue1", "extra2", "extraValue2"},
 			expected: []prompb.Label{
+				{Name: model.MetricNameLabel, Value: "test"},
 				{Name: "base1", Value: "value1"},
 				{Name: "base2", Value: "value2"},
 				{Name: "extra1", Value: "extraValue1"},
 				{Name: "extra2", Value: "extraValue2"},
-				{Name: model.MetricNameLabel, Value: "test"},
 			},
 		},
 		{
@@ -1030,10 +1030,10 @@ func TestCreateLabels(t *testing.T) {
 			},
 			extras: []string{"extra1", "extraValue1", "extra2"},
 			expected: []prompb.Label{
+				{Name: model.MetricNameLabel, Value: "test"},
 				{Name: "base1", Value: "value1"},
 				{Name: "base2", Value: "value2"},
 				{Name: "extra1", Value: "extraValue1"},
-				{Name: model.MetricNameLabel, Value: "test"},
 			},
 		},
 		{
@@ -1042,15 +1042,15 @@ func TestCreateLabels(t *testing.T) {
 			baseLabels: nil,
 			extras:     []string{"extra1", "extraValue1"},
 			expected: []prompb.Label{
-				{Name: "extra1", Value: "extraValue1"},
 				{Name: model.MetricNameLabel, Value: "test"},
+				{Name: "extra1", Value: "extraValue1"},
 			},
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			lbls := createLabels(tc.metricName, tc.baseLabels, tc.extras...)
-			assert.Equal(t, lbls, tc.expected)
+			assert.Equal(t, tc.expected, lbls)
 		})
 	}
 }

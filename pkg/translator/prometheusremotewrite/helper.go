@@ -206,6 +206,7 @@ func (c *prometheusConverter) addHistogramDataPoints(dataPoints pmetric.Histogra
 		pt := dataPoints.At(x)
 		timestamp := convertTimeStamp(pt.Timestamp())
 		baseLabels := createAttributes(resource, pt.Attributes(), settings.ExternalLabels, nil, false)
+		sort.Sort(ByLabelName(baseLabels))
 
 		// If the sum is unset, it indicates the _sum metric point should be
 		// omitted
@@ -397,7 +398,7 @@ func (c *prometheusConverter) addSummaryDataPoints(dataPoints pmetric.SummaryDat
 		pt := dataPoints.At(x)
 		timestamp := convertTimeStamp(pt.Timestamp())
 		baseLabels := createAttributes(resource, pt.Attributes(), settings.ExternalLabels, nil, false)
-
+		sort.Sort(ByLabelName(baseLabels))
 		// treat sum as a sample in an individual TimeSeries
 		sum := &prompb.Sample{
 			Value:     pt.Sum(),
@@ -449,8 +450,10 @@ func (c *prometheusConverter) addSummaryDataPoints(dataPoints pmetric.SummaryDat
 // If extras is uneven length, the last (unpaired) extra will be ignored.
 func createLabels(name string, baseLabels []prompb.Label, extras ...string) []prompb.Label {
 	extraLabelCount := len(extras) / 2
-	labels := make([]prompb.Label, len(baseLabels), len(baseLabels)+extraLabelCount+1) // +1 for name
-	copy(labels, baseLabels)
+	labels := make([]prompb.Label, len(baseLabels)+1, len(baseLabels)+extraLabelCount+1) // +1 for name
+	// Insert name at the beginning as it is most likely first
+	labels[0] = prompb.Label{Name: model.MetricNameLabel, Value: name}
+	copy(labels[1:], baseLabels)
 
 	n := len(extras)
 	n -= n % 2
@@ -458,7 +461,6 @@ func createLabels(name string, baseLabels []prompb.Label, extras ...string) []pr
 		labels = append(labels, prompb.Label{Name: extras[extrasIdx], Value: extras[extrasIdx+1]})
 	}
 
-	labels = append(labels, prompb.Label{Name: model.MetricNameLabel, Value: name})
 	return labels
 }
 
